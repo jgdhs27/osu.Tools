@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
@@ -23,6 +24,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
+
             double addition = 1;
 
             // We get an extra addition if we are not a slider or spinner
@@ -31,8 +33,21 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
                 if (hasColourChange(current))
                     addition += 0.75;
 
+                double rd = 0;
+
                 if (hasRhythmChange(current))
-                    addition += 1;
+                    rd = 1;
+
+                System.IO.File.AppendAllText(@"outold.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+
+                rd = rhythmicDifficulty(current);
+
+                System.IO.File.AppendAllText(@"outnew.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+
+
+                addition += rd;
             }
             else
             {
@@ -46,7 +61,80 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             if (current.DeltaTime < 50)
                 additionFactor = 0.4 + 0.6 * current.DeltaTime / 50;
 
+            // Console.WriteLine("additionFactor: {0:F20}", additionFactor * addition);
+
+            // System.IO.File.AppendAllText(@"out.txt", current.BaseObject.StartTime.ToString("0.000000") +
+            //         " " + current.BaseObject.ToString() + " " + (additionFactor * addition).ToString("0.000000") + "\n");
+
             return additionFactor * addition;
+        }
+
+        private List<HistoryObject> objectHistory = new List<HistoryObject>();
+
+        private class HistoryObject
+        {
+            public static int LastRhythmID = 0;
+
+            public int RhythmID;
+            public double Time;
+            public double DeltaTime;
+            public HistoryObject(DifficultyHitObject o)
+            {
+                Time = o.BaseObject.StartTime;
+                DeltaTime = o.DeltaTime;
+            }
+        }
+
+        private bool sameWindow(HistoryObject o1, HistoryObject o2)
+        {
+            double timeElapsedRatio = Math.Max(o1.DeltaTime / o2.DeltaTime, o2.DeltaTime / o1.DeltaTime);
+
+            return timeElapsedRatio < 1.05;
+        }
+
+        private double rhythmicDifficulty(DifficultyHitObject currentHO)
+        {
+
+            // how much of the history should be analysed, in ms
+            int historyLength = 1000;
+
+            HistoryObject current = new HistoryObject(currentHO);
+            while (objectHistory.Count > 0 && objectHistory[0].Time < current.Time - historyLength)
+            {
+                objectHistory.RemoveAt(0);
+            }
+
+            double repititionValue = 1;
+
+            HashSet<int> rhythmIDSet = new HashSet<int>();
+            foreach (HistoryObject other in objectHistory)
+            {
+                if (sameWindow(current, other))
+                {
+                    current.RhythmID = other.RhythmID;
+                    repititionValue *= Math.Sqrt((current.Time - other.Time) / historyLength);
+                };
+                rhythmIDSet.Add(other.RhythmID);
+            }
+
+            int uniqueRhythmCount = rhythmIDSet.Count;
+
+            if (repititionValue == 1) // new rhythm
+            {
+                HistoryObject.LastRhythmID += 1;
+                current.RhythmID = HistoryObject.LastRhythmID;
+                uniqueRhythmCount += 1;
+            }
+
+            double uniqueBonus = Math.Sqrt(uniqueRhythmCount) / 2;
+
+            objectHistory.Add(current);
+
+            // the first two notes after a break have no rhythmic difficulty
+            if (objectHistory.Count <= 2)
+                return 0;
+
+            return repititionValue * uniqueBonus;
         }
 
         private bool hasRhythmChange(DifficultyHitObject current)
