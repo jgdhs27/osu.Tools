@@ -1,6 +1,7 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using osu.Game.Beatmaps;
@@ -24,6 +25,44 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public TaikoDifficultyCalculator(Ruleset ruleset, WorkingBeatmap beatmap)
             : base(ruleset, beatmap)
         {
+        }
+
+        private DifficultyAttributes taikoCalculate(IBeatmap beatmap, Mod[] mods, double clockRate)
+        {
+            var skills = CreateSkills(beatmap);
+
+            if (!beatmap.HitObjects.Any())
+                return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
+
+            var difficultyHitObjects = CreateDifficultyHitObjects(beatmap, clockRate).OrderBy(h => h.BaseObject.StartTime).ToList();
+
+            double sectionLength = SectionLength * clockRate;
+
+            // The first object doesn't generate a strain, so we begin with an incremented section end
+            double currentSectionEnd = Math.Ceiling(beatmap.HitObjects.First().StartTime / sectionLength) * sectionLength;
+
+            foreach (DifficultyHitObject h in difficultyHitObjects)
+            {
+                while (h.BaseObject.StartTime > currentSectionEnd)
+                {
+                    foreach (Skill s in skills)
+                    {
+                        s.SaveCurrentPeak();
+                        s.StartNewSectionFrom(currentSectionEnd);
+                    }
+
+                    currentSectionEnd += sectionLength;
+                }
+
+                foreach (Skill s in skills)
+                    s.Process(h);
+            }
+
+            // The peak strain will not be saved for the last section in the above loop
+            foreach (Skill s in skills)
+                s.SaveCurrentPeak();
+
+            return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
         }
 
         protected override DifficultyAttributes CreateDifficultyAttributes(IBeatmap beatmap, Mod[] mods, Skill[] skills, double clockRate)
@@ -60,5 +99,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             new TaikoModEasy(),
             new TaikoModHardRock(),
         };
+
+        protected override DifficultyAttributes VirtualCalculate(IBeatmap beatmap, Mod[] mods, double clockRate)
+            => taikoCalculate(beatmap, mods, clockRate);
+
     }
 }

@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using osu.Framework.Audio.Track;
 using osu.Framework.Extensions.IEnumerableExtensions;
+using osu.Framework.Timing;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
@@ -41,11 +41,15 @@ namespace osu.Game.Rulesets.Difficulty
 
             IBeatmap playableBeatmap = beatmap.GetPlayableBeatmap(ruleset.RulesetInfo, mods);
 
-            var track = new TrackVirtual(10000);
-            mods.OfType<IApplicableToTrack>().ForEach(m => m.ApplyToTrack(track));
+            var clock = new StopwatchClock();
+            mods.OfType<IApplicableToClock>().ForEach(m => m.ApplyToClock(clock));
 
-            return calculate(playableBeatmap, mods, track.Rate);
+            // idk what the correct way to override DifficultyCalculator.calculate is
+            return VirtualCalculate(playableBeatmap, mods, clock.Rate);
         }
+
+        protected virtual DifficultyAttributes VirtualCalculate(IBeatmap beatmap, Mod[] mods, double clockRate)
+            => calculate(beatmap, mods, clockRate);
 
         /// <summary>
         /// Calculates the difficulty of the beatmap using all mod combinations applicable to the beatmap.
