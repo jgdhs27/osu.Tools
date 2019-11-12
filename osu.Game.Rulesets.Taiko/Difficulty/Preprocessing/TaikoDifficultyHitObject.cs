@@ -31,7 +31,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
 
             private static readonly int power_2_max = 4;
             private static readonly int power_3_max = 2;
-            private static readonly double ratio_tol = Math.Pow(2, -power_2_max) * Math.Pow(3, -power_3_max) / 2;
             private static Rhythm[] commonRhythms;
 
             public int ID = 0;
@@ -39,29 +38,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             private static void initialiseCommonRhythms()
             {
                 List<Rhythm> commonRhythmList = new List<Rhythm>();
-                for (int power2 = -4; power2 < 5; power2++)
+                for (int power2 = -power_2_max; power2 <= power_2_max; power2++)
                 {
-                    for (int power3 = -2; power3 < 3; power3++)
+                    for (int power3 = -power_3_max; power3 <= power_3_max; power3++)
                     {
                         commonRhythmList.Add(new Rhythm(Math.Pow(2, power2) * Math.Pow(3, power3)));
                     }
                 }
-                commonRhythmList.Sort();
-                double prevRatio = 0.0;
-                int id = 0;
-                List<Rhythm> uniques = new List<Rhythm>();
-                foreach (Rhythm r in commonRhythmList)
-                {
-                    if (r.ratio - prevRatio > ratio_tol)
-                    {
-                        uniques.Append(r);
-                        r.ID = id;
-                        id++;
-                    }
-                    prevRatio = r.ratio;
-                }
+                commonRhythmList.Sort((x, y) => x.ratio < y.ratio ? -1 : 1);
 
-                commonRhythms = uniques.ToArray();
+                commonRhythms = commonRhythmList.ToArray();
+
             }
 
             private Rhythm(double ratio)
