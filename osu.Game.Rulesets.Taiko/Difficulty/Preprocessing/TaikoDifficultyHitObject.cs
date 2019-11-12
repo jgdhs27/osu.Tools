@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Taiko.Objects;
@@ -46,6 +45,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                     }
                 }
                 commonRhythmList.Sort((x, y) => x.ratio < y.ratio ? -1 : 1);
+
+                for (int i = 0; i < commonRhythmList.Count; i++)
+                {
+                    commonRhythmList[i].ID = i;
+                }
 
                 commonRhythms = commonRhythmList.ToArray();
 
