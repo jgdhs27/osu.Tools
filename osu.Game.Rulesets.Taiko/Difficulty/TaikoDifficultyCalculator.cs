@@ -47,8 +47,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
         {
-            for (int i = 1; i < beatmap.HitObjects.Count; i++)
-                yield return new TaikoDifficultyHitObject(beatmap.HitObjects[i], beatmap.HitObjects[i - 1], clockRate);
+            for (int i = 2; i < beatmap.HitObjects.Count; i++)
+                yield return new TaikoDifficultyHitObject(beatmap.HitObjects[i], beatmap.HitObjects[i - 1], beatmap.HitObjects[i - 2], clockRate);
         }
 
         protected override Skill[] CreateSkills(IBeatmap beatmap) => new Skill[] { new Strain() };
