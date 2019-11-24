@@ -6,11 +6,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
     public abstract class Pattern
     {
         protected readonly int Length;
+        protected readonly int patternStart;
+
         public abstract override int GetHashCode();
         public abstract override bool Equals(object obj);
 
-        protected Pattern(int length)
+        protected Pattern(int patternStart, int length)
         {
+            this.patternStart = patternStart;
             this.Length = length;
         }
 

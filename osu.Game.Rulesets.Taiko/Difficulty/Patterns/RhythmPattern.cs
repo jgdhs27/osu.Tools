@@ -54,10 +54,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
 
             return true;
 
-        };
+        }
 
-        public RhythmPattern(IReadOnlyList<TaikoDifficultyHitObject> recentObjects, int length)
-            : base(length)
+        public RhythmPattern(IReadOnlyList<TaikoDifficultyHitObject> recentObjects, int patternStart, int length)
+            : base(patternStart, length)
         {
             rhythmIDs = new int[length];
 
@@ -66,5 +66,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
                 rhythmIDs[i] = recentObjects[recentObjects.Count - length + i].RhythmID;
             }
         }
+
+        public override string ToString()
+        {
+            string s = "";
+
+            for (int i = 0; i < Length; i++)
+            {
+                string note = rhythmIDs[i] + " ";
+                s = note + s;
+            }
+
+            return s;
+        }
+
     }
 }

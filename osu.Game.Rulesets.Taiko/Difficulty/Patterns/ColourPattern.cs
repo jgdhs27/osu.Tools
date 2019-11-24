@@ -14,8 +14,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
 
         private readonly uint patternBitstring;
 
-        public ColourPattern(IReadOnlyList<TaikoDifficultyHitObject> recentObjects, int length)
-            : base(length)
+        public ColourPattern(IReadOnlyList<TaikoDifficultyHitObject> recentObjects, int patternStart, int length)
+            : base(patternStart, length)
         {
             Debug.Assert(length <= int32_bits, "Colour patterns are limited to 32 objects!");
 
@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
             for (int i = 0; i < length; i++)
             {
                 int nextBit = recentObjects[recentObjects.Count - length + i].BaseObject is RimHit ? 1 : 0;
-                b = (patternBitstring << 1) ^ nextBit;
+                b = (b << 1) ^ nextBit;
             }
 
             patternBitstring = (uint)b;
@@ -37,6 +37,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
 
             ColourPattern c = (ColourPattern)obj;
             return c.patternBitstring == this.patternBitstring;
-        };
+        }
+
+        public override string ToString()
+        {
+            string s = "";
+
+            for (int i = 0; i < Length; i++)
+            {
+                string note = (((patternBitstring >> i) & 1) == 1) ? "k" : "d";
+                s = note + s;
+            }
+
+            return s;
+        }
     }
 }
