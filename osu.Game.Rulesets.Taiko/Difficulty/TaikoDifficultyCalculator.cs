@@ -4,11 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
+using osu.Game.Rulesets.Taiko.Difficulty.Patterns;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Mods;
@@ -33,6 +35,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
 
             var difficultyHitObjects = CreateDifficultyHitObjects(beatmap, clockRate).OrderBy(h => h.BaseObject.StartTime).ToList();
+
+            new PatternGenerator().Create(difficultyHitObjects);
 
             double sectionLength = SectionLength * clockRate;
 
