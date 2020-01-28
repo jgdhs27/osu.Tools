@@ -38,13 +38,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
                 if (hasRhythmChange(current))
                     rd = 1;
 
-                System.IO.File.AppendAllText(@"outold.txt", current.BaseObject.StartTime.ToString("0.000000") +
-                        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
 
-                rd = rhythmicDifficulty(current);
 
-                System.IO.File.AppendAllText(@"outnew.txt", current.BaseObject.StartTime.ToString("0.000000") +
-                        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+                // System.IO.File.AppendAllText(@"outold.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                //       " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+
+                // rd = rhythmicDifficulty(current);
+
+                rd = rhythmicDifficultyRatio((TaikoDifficultyHitObject)current);
+
+                // System.IO.File.AppendAllText(@"outnew.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                //        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
 
 
                 addition += rd;
@@ -91,6 +95,58 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
             return timeElapsedRatio < 1.05;
         }
+
+
+        private List<TaikoDifficultyHitObject> ratioObjectHistory = new List<TaikoDifficultyHitObject>();
+        private int ratioHistoryLength = 0;
+        private const int ratio_history_max_length = 8;
+        private double rhythmicDifficultyRatio(TaikoDifficultyHitObject currentHO)
+        {
+
+            if (!currentHO.HasTimingChange)
+            {
+                return 0.0;
+            }
+
+            double objectDifficulty = 1.0;
+
+            ratioObjectHistory.Add(currentHO);
+            // Console.WriteLine("timing change");
+            ratioHistoryLength += 1;
+            if (ratioHistoryLength > ratio_history_max_length)
+            {
+                ratioObjectHistory.RemoveAt(0);
+                ratioHistoryLength -= 1;
+            }
+
+            // find repeated ratios
+
+            for (int l = 2; l <= ratio_history_max_length / 2; l++)
+            {
+                for (int start = ratioHistoryLength - l - 1; start >= 0; start--)
+                {
+                    bool samePattern = true;
+                    for (int i = 0; i < l; i++)
+                    {
+                        if (ratioObjectHistory[start + i].RhythmID != ratioObjectHistory[ratioHistoryLength - l + i].RhythmID)
+                        {
+                            samePattern = false;
+                        }
+                    }
+
+                    if (samePattern) // Repitition found!
+                    {
+                        double timeSince = currentHO.BaseObject.StartTime - ratioObjectHistory[start].BaseObject.StartTime;
+                        objectDifficulty *= Math.Atan(timeSince / 1000) / (Math.PI / 2);
+                    }
+                }
+            }
+
+            Console.WriteLine(objectDifficulty);
+            return objectDifficulty;
+
+        }
+
 
         private double rhythmicDifficulty(DifficultyHitObject currentHO)
         {

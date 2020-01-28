@@ -21,8 +21,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
             public static int LastRhythmID = 0;
 
             public int RhythmID;
-            public double Time;
-            public double DeltaTime;
+            public readonly double Time;
+            public readonly double DeltaTime;
             public HistoryObject(DifficultyHitObject o)
             {
                 Time = o.BaseObject.StartTime;
@@ -56,7 +56,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                 objectHistory.RemoveAt(0);
             }
 
-            double repititionValue = 1;
+            double repetitionValue = 1;
 
             HashSet<int> rhythmIDSet = new HashSet<int>();
             foreach (HistoryObject other in objectHistory)
@@ -64,14 +64,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                 if (sameWindow(currentHO, other))
                 {
                     currentHO.RhythmID = other.RhythmID;
-                    repititionValue *= Math.Sqrt((currentHO.Time - other.Time) / historyLength);
+                    repetitionValue *= Math.Sqrt((currentHO.Time - other.Time) / historyLength);
                 };
                 rhythmIDSet.Add(other.RhythmID);
             }
 
             int uniqueRhythmCount = rhythmIDSet.Count;
 
-            if (repititionValue == 1) // new rhythm
+            if (repetitionValue == 1) // new rhythm
             {
                 HistoryObject.LastRhythmID += 1;
                 currentHO.RhythmID = HistoryObject.LastRhythmID;
@@ -80,13 +80,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
 
             double uniqueBonus = Math.Sqrt(uniqueRhythmCount) / 2;
 
-            objectHistory.Add(current);
+            objectHistory.Add(currentHO);
 
             // the first two notes after a break have no rhythmic difficulty
             if (objectHistory.Count <= 2)
                 return 0;
 
-            double rd = repititionValue * uniqueBonus;
+            double rd = repetitionValue * uniqueBonus;
 
             double additionFactor = 1;
 
@@ -96,5 +96,5 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
             return additionFactor * rd;
         }
 
-}
+    }
 }
