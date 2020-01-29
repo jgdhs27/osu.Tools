@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
+using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
@@ -56,14 +57,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
 
         }
 
-        public RhythmPattern(IReadOnlyList<TaikoDifficultyHitObject> recentObjects, int patternStart, int length)
+        public RhythmPattern(IReadOnlyList<DifficultyHitObject> objects, int patternStart, int length)
             : base(patternStart, length)
         {
             rhythmIDs = new int[length];
 
             for (int i = 0; i < length; i++)
             {
-                rhythmIDs[i] = recentObjects[recentObjects.Count - length + i].RhythmID;
+                rhythmIDs[i] = ((TaikoDifficultyHitObject) objects[patternStart + i]).RhythmID;
             }
         }
 
@@ -74,7 +75,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
             for (int i = 0; i < Length; i++)
             {
                 string note = rhythmIDs[i] + " ";
-                s = note + s;
+                s = s + note;
             }
 
             return s;

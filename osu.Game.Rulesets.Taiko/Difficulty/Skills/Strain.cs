@@ -40,16 +40,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
 
 
-                // System.IO.File.AppendAllText(@"outold.txt", current.BaseObject.StartTime.ToString("0.000000") +
-                //       " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+                //System.IO.File.AppendAllText(@"outold.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                //" " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
 
                 // rd = rhythmicDifficulty(current);
 
                 rd = rhythmicDifficultyRatio((TaikoDifficultyHitObject)current);
 
-                // System.IO.File.AppendAllText(@"outnew.txt", current.BaseObject.StartTime.ToString("0.000000") +
-                //        " " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
+                //System.IO.File.AppendAllText(@"outnew.txt", current.BaseObject.StartTime.ToString("0.000000") +
+                //" " + current.BaseObject.ToString() + " " + rd.ToString("0.000000") + "\n");
 
+                rd = 0.0;
 
                 addition += rd;
             }
@@ -142,7 +143,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
                 }
             }
 
-            Console.WriteLine(objectDifficulty);
+            // objectDifficulty *= (50.0 / currentHO.DeltaTime);
             return objectDifficulty;
 
         }
@@ -206,6 +207,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
             double difference = Math.Log(timeElapsedRatio, rhythm_change_base) % 1.0;
 
+            // rhythm_change_base = 2.0
+
+            // return 0.2 < difference < 0.8
             return difference > rhythm_change_base_threshold && difference < 1 - rhythm_change_base_threshold;
         }
 

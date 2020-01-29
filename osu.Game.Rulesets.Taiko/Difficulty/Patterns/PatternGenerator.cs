@@ -1,8 +1,10 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
@@ -11,7 +13,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
     {
 
 
-        public void Create(List<TaikoDifficultyHitObject> hitObjects)
+        public void Create(List<DifficultyHitObject> hitObjects)
         {
 
             List<RhythmPattern> rhythmPatterns = new List<RhythmPattern>();
@@ -19,7 +21,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
 
             for (int i = 0; i < hitObjects.Count(); i++)
             {
-                if (hitObjects[i].HasTimingChange) rhythmChangeLocations.Add(i);
+                if (((TaikoDifficultyHitObject) hitObjects[i]).HasTimingChange) rhythmChangeLocations.Add(i);
             }
 
             for (int i = 0; i < rhythmChangeLocations.Count; i++)
@@ -29,9 +31,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Patterns
                 {
                     if (i + numChanges >= rhythmChangeLocations.Count) break;
                     int patternEnd = rhythmChangeLocations[i + numChanges];
-                    RhythmPattern pattern = new RhythmPattern(hitObjects, patternStart, patternEnd-patternStart);
+                    RhythmPattern pattern = new RhythmPattern(hitObjects, patternStart, patternEnd - patternStart);
                     rhythmPatterns.Add(pattern);
-
+                    // if (numChanges == 4) Console.WriteLine(pattern);
                 }
             }
         }

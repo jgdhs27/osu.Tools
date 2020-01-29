@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
+using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
@@ -14,86 +15,55 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
         protected override double SkillMultiplier => 1;
         protected override double StrainDecayBase => 0.3;
 
-        private List<HistoryObject> objectHistory = new List<HistoryObject>();
-
-        private class HistoryObject
-        {
-            public static int LastRhythmID = 0;
-
-            public int RhythmID;
-            public readonly double Time;
-            public readonly double DeltaTime;
-            public HistoryObject(DifficultyHitObject o)
-            {
-                Time = o.BaseObject.StartTime;
-                DeltaTime = o.DeltaTime;
-            }
-        }
-
-        private bool sameWindow(HistoryObject o1, HistoryObject o2)
-        {
-            double timeElapsedRatio = Math.Max(o1.DeltaTime / o2.DeltaTime, o2.DeltaTime / o1.DeltaTime);
-
-            return timeElapsedRatio < 1.05;
-        }
-
-        protected override double StrainValueOf(DifficultyHitObject current)
+        private List<TaikoDifficultyHitObject> ratioObjectHistory = new List<TaikoDifficultyHitObject>();
+        private int ratioHistoryLength = 0;
+        private const int ratio_history_max_length = 8;
+        protected override double StrainValueOf(DifficultyHitObject dho)
         {
 
-            // We get an extra addition if we are not a slider or spinner
-            if (!(current.LastObject is Hit) || !(current.BaseObject is Hit) || !(current.DeltaTime < 1000))
+            TaikoDifficultyHitObject currentHO = (TaikoDifficultyHitObject) dho;
+            if (!currentHO.HasTimingChange)
             {
-                return 0;
+                return 0.0;
             }
 
-            // how much of the history should be analysed, in ms
-            int historyLength = 1000;
+            double objectDifficulty = 1.0;
 
-            HistoryObject currentHO = new HistoryObject(current);
-
-            while (objectHistory.Count > 0 && objectHistory[0].Time < currentHO.Time - historyLength)
+            ratioObjectHistory.Add(currentHO);
+            // Console.WriteLine("timing change");
+            ratioHistoryLength += 1;
+            if (ratioHistoryLength > ratio_history_max_length)
             {
-                objectHistory.RemoveAt(0);
+                ratioObjectHistory.RemoveAt(0);
+                ratioHistoryLength -= 1;
             }
 
-            double repetitionValue = 1;
+            // find repeated ratios
 
-            HashSet<int> rhythmIDSet = new HashSet<int>();
-            foreach (HistoryObject other in objectHistory)
+            for (int l = 2; l <= ratio_history_max_length / 2; l++)
             {
-                if (sameWindow(currentHO, other))
+                for (int start = ratioHistoryLength - l - 1; start >= 0; start--)
                 {
-                    currentHO.RhythmID = other.RhythmID;
-                    repetitionValue *= Math.Sqrt((currentHO.Time - other.Time) / historyLength);
-                };
-                rhythmIDSet.Add(other.RhythmID);
+                    bool samePattern = true;
+                    for (int i = 0; i < l; i++)
+                    {
+                        if (ratioObjectHistory[start + i].RhythmID != ratioObjectHistory[ratioHistoryLength - l + i].RhythmID)
+                        {
+                            samePattern = false;
+                        }
+                    }
+
+                    if (samePattern) // Repitition found!
+                    {
+                        double timeSince = currentHO.BaseObject.StartTime - ratioObjectHistory[start].BaseObject.StartTime;
+                        objectDifficulty *= Math.Atan(timeSince / 1000) / (Math.PI / 2);
+                    }
+                }
             }
 
-            int uniqueRhythmCount = rhythmIDSet.Count;
+            // objectDifficulty *= (50.0 / currentHO.DeltaTime);
+            return objectDifficulty;
 
-            if (repetitionValue == 1) // new rhythm
-            {
-                HistoryObject.LastRhythmID += 1;
-                currentHO.RhythmID = HistoryObject.LastRhythmID;
-                uniqueRhythmCount += 1;
-            }
-
-            double uniqueBonus = Math.Sqrt(uniqueRhythmCount) / 2;
-
-            objectHistory.Add(currentHO);
-
-            // the first two notes after a break have no rhythmic difficulty
-            if (objectHistory.Count <= 2)
-                return 0;
-
-            double rd = repetitionValue * uniqueBonus;
-
-            double additionFactor = 1;
-
-            if (current.DeltaTime < 50)
-                additionFactor = 0.4 + 0.6 * current.DeltaTime / 50;
-
-            return additionFactor * rd;
         }
 
     }
