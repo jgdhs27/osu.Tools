@@ -21,6 +21,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
         private const double star_scaling_factor = 0.04125;
+        private const double tech_scaling_factor = 0.05;
 
         public TaikoDifficultyCalculator(Ruleset ruleset, WorkingBeatmap beatmap)
             : base(ruleset, beatmap)
@@ -72,9 +73,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (beatmap.HitObjects.Count == 0)
                 return new TaikoDifficultyAttributes { Mods = mods, Skills = skills };
 
+            double strainRating = skills[0].DifficultyValue() * star_scaling_factor;
+            double techRating = skills[1].DifficultyValue() * tech_scaling_factor;
+
+            Console.WriteLine(strainRating);
+            Console.WriteLine(techRating);
+            double starRating = strainRating + techRating;
+
             return new TaikoDifficultyAttributes
             {
-                StarRating = skills.Single().DifficultyValue() * star_scaling_factor,
+                StarRating = starRating,
                 Mods = mods,
                 // Todo: This int cast is temporary to achieve 1:1 results with osu!stable, and should be removed in the future
                 GreatHitWindow = (int)(beatmap.HitObjects.First().HitWindows.Great / 2) / clockRate,
@@ -89,7 +97,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 yield return new TaikoDifficultyHitObject(beatmap.HitObjects[i], beatmap.HitObjects[i - 1], beatmap.HitObjects[i - 2], clockRate);
         }
 
-        protected override Skill[] CreateSkills(IBeatmap beatmap) => new Skill[] { new Strain() };
+        protected override Skill[] CreateSkills(IBeatmap beatmap) => new Skill[]
+        {
+            new Strain(),
+            new Tech(),
+        };
 
         protected override Mod[] DifficultyAdjustmentMods => new Mod[]
         {

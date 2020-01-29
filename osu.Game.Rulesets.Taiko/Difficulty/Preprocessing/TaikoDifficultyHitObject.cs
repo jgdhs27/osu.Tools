@@ -12,52 +12,76 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
     public class TaikoDifficultyHitObject : DifficultyHitObject
     {
         public readonly bool HasTypeChange;
+        public readonly bool HasTimingChange;
+        public readonly bool isBreak;
 
         public readonly int RhythmID;
+
+        public readonly double noteLength;
 
         public TaikoDifficultyHitObject(HitObject hitObject, HitObject lastObject, HitObject lastLastObject, double clockRate)
             : base(hitObject, lastObject, clockRate)
         {
-            HasTypeChange = lastObject is RimHit != hitObject is RimHit;
 
-            double thisLength = hitObject.StartTime - lastObject.StartTime;
+            noteLength = hitObject.StartTime - lastObject.StartTime;
             double prevLength = lastObject.StartTime - lastLastObject.StartTime;
-            RhythmID = Rhythm.GetClosest(thisLength / prevLength).ID;
+            RhythmID = Rhythm.GetClosest(noteLength / prevLength).ID;
+
+            HasTypeChange = lastObject is RimHit != hitObject is RimHit;
+            HasTimingChange = !Rhythm.IsRepeat(RhythmID);
         }
+
+        public const int CONST_RHYTHM_ID = 0;
 
         private class Rhythm
         {
 
-            private static readonly int power_2_max = 4;
-            private static readonly int power_3_max = 2;
             private static Rhythm[] commonRhythms;
+            private static Rhythm constRhythm;
 
             public int ID = 0;
             private readonly double ratio;
             private static void initialiseCommonRhythms()
             {
                 List<Rhythm> commonRhythmList = new List<Rhythm>();
-                for (int power2 = -power_2_max; power2 <= power_2_max; power2++)
-                {
-                    for (int power3 = -power_3_max; power3 <= power_3_max; power3++)
-                    {
-                        commonRhythmList.Add(new Rhythm(Math.Pow(2, power2) * Math.Pow(3, power3)));
-                    }
-                }
+                commonRhythmList.Add(new Rhythm(3, 1));
                 commonRhythmList.Sort((x, y) => x.ratio < y.ratio ? -1 : 1);
 
-                for (int i = 0; i < commonRhythmList.Count; i++)
-                {
-                    commonRhythmList[i].ID = i;
-                }
 
                 commonRhythms = commonRhythmList.ToArray();
+                commonRhythms = new Rhythm[]
+                {
+                    new Rhythm(1, 1),
+                    new Rhythm(2, 1),
+                    new Rhythm(1, 2),
+                    new Rhythm(3, 1),
+                    new Rhythm(1, 3),
+                    new Rhythm(3, 2),
+                    new Rhythm(2, 3)
+                };
 
+                for (int i = 0; i < commonRhythms.Length; i++)
+                {
+                    commonRhythms[i].ID = i;
+                }
+
+                constRhythm = commonRhythms[CONST_RHYTHM_ID];
+
+            }
+
+            public static bool IsRepeat(int id)
+            {
+                return id == CONST_RHYTHM_ID;
             }
 
             private Rhythm(double ratio)
             {
                 this.ratio = ratio;
+            }
+
+            private Rhythm(int numerator, int denominator)
+            {
+                this.ratio = ((double)numerator) / ((double)denominator);
             }
 
             // Code is inefficient - we are searching exhaustively through the sorted list commonRhythms
@@ -73,6 +97,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
 
                 foreach (Rhythm r in commonRhythms)
                 {
+
                     if (Math.Abs(r.ratio - ratio) < closestDistance)
                     {
                         closestRhythm = r;
