@@ -71,15 +71,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 return new TaikoDifficultyAttributes { Mods = mods, Skills = skills };
 
             double colourRating = skills[0].DifficultyValue() * 0.033;
-            double techRating = skills[1].DifficultyValue() * 0.033;
             double staminaRating = skills[2].DifficultyValue() + skills[3].DifficultyValue();
+            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 2) / staminaRating * 0.25;
             staminaRating = Math.Pow(staminaRating, 1.5);
             staminaRating *= 0.001;
 
             Console.WriteLine(colourRating);
-            Console.WriteLine(techRating);
+            Console.WriteLine(rhythmRating);
             Console.WriteLine(staminaRating);
-            double starRating = colourRating + techRating + staminaRating;
+            double starRating = colourRating + rhythmRating + staminaRating;
 
             return new TaikoDifficultyAttributes
             {
@@ -101,7 +101,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         protected override Skill[] CreateSkills(IBeatmap beatmap) => new Skill[]
         {
             new Colour(),
-            new Tech(),
+            new Rhythm(),
             new Stamina(true),
             new Stamina(false),
         };

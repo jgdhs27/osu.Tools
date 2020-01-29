@@ -9,7 +9,7 @@ using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
-    public class Tech : Skill
+    public class Rhythm : Skill
     {
 
         protected override double SkillMultiplier => 1;
