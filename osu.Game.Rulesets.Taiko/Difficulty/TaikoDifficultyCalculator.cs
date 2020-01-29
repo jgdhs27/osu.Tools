@@ -20,9 +20,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double star_scaling_factor = 0.04125;
-        private const double tech_scaling_factor = 0.05;
-
         public TaikoDifficultyCalculator(Ruleset ruleset, WorkingBeatmap beatmap)
             : base(ruleset, beatmap)
         {
@@ -73,12 +70,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (beatmap.HitObjects.Count == 0)
                 return new TaikoDifficultyAttributes { Mods = mods, Skills = skills };
 
-            double strainRating = skills[0].DifficultyValue() * star_scaling_factor;
-            double techRating = skills[1].DifficultyValue() * tech_scaling_factor;
+            double colourRating = skills[0].DifficultyValue() * 0.033;
+            double techRating = skills[1].DifficultyValue() * 0.033;
+            double staminaRating = skills[2].DifficultyValue() + skills[3].DifficultyValue();
+            staminaRating = Math.Pow(staminaRating, 1.5);
+            staminaRating *= 0.001;
 
-            Console.WriteLine(strainRating);
+            Console.WriteLine(colourRating);
             Console.WriteLine(techRating);
-            double starRating = strainRating + techRating;
+            Console.WriteLine(staminaRating);
+            double starRating = colourRating + techRating + staminaRating;
 
             return new TaikoDifficultyAttributes
             {
@@ -99,8 +100,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         protected override Skill[] CreateSkills(IBeatmap beatmap) => new Skill[]
         {
-            new Strain(),
+            new Colour(),
             new Tech(),
+            new Stamina(true),
+            new Stamina(false),
         };
 
         protected override Mod[] DifficultyAdjustmentMods => new Mod[]
