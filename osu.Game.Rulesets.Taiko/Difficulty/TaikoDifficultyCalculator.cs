@@ -84,7 +84,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 double colourPeak = Math.Pow(colour.StrainPeaks[i], 0.8) * 0.05;
                 double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1.5) * 0.018;
-                double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * 0.0018;
+                double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * 0.0017;
                 peaks.Add(norm(3, colourPeak, rhythmPeak, staminaPeak));
             }
             foreach (double strain in peaks.OrderByDescending(d => d))
@@ -93,7 +93,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 weight *= 0.9;
             }
 
-            return difficulty * 3.3;
+            return Math.Pow(difficulty, 0.9) * 3.8;
         }
 
         protected override DifficultyAttributes CreateDifficultyAttributes(IBeatmap beatmap, Mod[] mods, Skill[] skills, double clockRate)
@@ -109,7 +109,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             Console.WriteLine("colour\t" + colourRating);
             Console.WriteLine("rhythm\t" + rhythmRating);
             Console.WriteLine("stamina\t" + staminaRating);
-            double starRating = norm(3, colourRating, rhythmRating, staminaRating);
+            double starRating = norm(2, colourRating, rhythmRating, staminaRating);
 
             return new TaikoDifficultyAttributes
             {

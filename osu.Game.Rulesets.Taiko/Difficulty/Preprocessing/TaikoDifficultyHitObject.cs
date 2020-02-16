@@ -44,11 +44,29 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             private static void initialiseCommonRhythms()
             {
                 List<Rhythm> commonRhythmList = new List<Rhythm>();
-                commonRhythmList.Add(new Rhythm(3, 1));
-                commonRhythmList.Sort((x, y) => x.ratio < y.ratio ? -1 : 1);
+                commonRhythmList.Add(new Rhythm(1, 1));
+                for (int p2 = -2; p2 < 3; p2++)
+                {
+                    for (int p3 = -1; p3 < 2; p3++)
+                    {
+                        for (int p5 = -1; p5 < 1; p5++)
+                        {
+                            double r = Math.Pow(2, p2) * Math.Pow(3, p3) * Math.Pow(5, p5);
+                            if (r != 1.0 && r >= 0.5 && r <= 2)
+                            {
+                                commonRhythmList.Add(new Rhythm(r));
+                            }
+                        }
+                    }
+
+                }
+                commonRhythmList.Add(new Rhythm(9/4));
+                commonRhythmList.Add(new Rhythm(4/9));
 
 
                 commonRhythms = commonRhythmList.ToArray();
+
+                /*
                 commonRhythms = new Rhythm[]
                 {
                     new Rhythm(1, 1),
@@ -59,6 +77,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                     new Rhythm(3, 2),
                     new Rhythm(2, 3)
                 };
+                */
 
                 for (int i = 0; i < commonRhythms.Length; i++)
                 {
