@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FFmpeg.AutoGen;
 using NUnit.Framework;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty;
@@ -65,25 +66,54 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
         }
 
+        private double norm(double p, double v1, double v2, double v3)
+        {
+            return Math.Pow(
+                Math.Pow(v1, p) +
+                Math.Pow(v2, p) +
+                Math.Pow(v3, p)
+                , 1 / p);
+        }
+
+        private double combinedDifficulty(Skill colour, Skill rhythm, Skill stamina1, Skill stamina2)
+        {
+            double difficulty = 0;
+            double weight = 1;
+            List<double> peaks = new List<double>();
+            for (int i = 0; i < colour.StrainPeaks.Count; i++)
+            {
+                double colourPeak = Math.Pow(colour.StrainPeaks[i], 0.8) * 0.05;
+                double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1.5) * 0.018;
+                double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * 0.0018;
+                peaks.Add(norm(3, colourPeak, rhythmPeak, staminaPeak));
+            }
+            foreach (double strain in peaks.OrderByDescending(d => d))
+            {
+                difficulty += strain * weight;
+                weight *= 0.9;
+            }
+
+            return difficulty * 3.3;
+        }
+
         protected override DifficultyAttributes CreateDifficultyAttributes(IBeatmap beatmap, Mod[] mods, Skill[] skills, double clockRate)
         {
             if (beatmap.HitObjects.Count == 0)
                 return new TaikoDifficultyAttributes { Mods = mods, Skills = skills };
 
-            double colourRating = skills[0].DifficultyValue() * 0.033;
-            double staminaRating = skills[2].DifficultyValue() + skills[3].DifficultyValue();
-            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 2) / staminaRating * 0.25;
-            staminaRating = Math.Pow(staminaRating, 1.5);
-            staminaRating *= 0.001;
+            double colourRating = Math.Pow(skills[0].DifficultyValue(), 0.8) * 0.05;
+            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 1.5) * 0.018;
+            double staminaRating = Math.Pow(skills[2].DifficultyValue() + skills[3].DifficultyValue(), 1.5) * 0.0018;
+            double combinedRating = combinedDifficulty(skills[0], skills[1], skills[2], skills[3]);
 
-            Console.WriteLine(colourRating);
-            Console.WriteLine(rhythmRating);
-            Console.WriteLine(staminaRating);
-            double starRating = colourRating + rhythmRating + staminaRating;
+            Console.WriteLine("colour\t" + colourRating);
+            Console.WriteLine("rhythm\t" + rhythmRating);
+            Console.WriteLine("stamina\t" + staminaRating);
+            double starRating = norm(3, colourRating, rhythmRating, staminaRating);
 
             return new TaikoDifficultyAttributes
             {
-                StarRating = starRating,
+                StarRating = combinedRating,
                 Mods = mods,
                 // Todo: This int cast is temporary to achieve 1:1 results with osu!stable, and should be removed in the future
                 GreatHitWindow = (int)(beatmap.HitObjects.First().HitWindows.Great / 2) / clockRate,

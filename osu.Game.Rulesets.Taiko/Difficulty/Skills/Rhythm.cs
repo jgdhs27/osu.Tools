@@ -18,12 +18,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
         private List<TaikoDifficultyHitObject> ratioObjectHistory = new List<TaikoDifficultyHitObject>();
         private int ratioHistoryLength = 0;
         private const int ratio_history_max_length = 8;
+
+        private int rhythmLength = 0;
         protected override double StrainValueOf(DifficultyHitObject dho)
         {
 
             TaikoDifficultyHitObject currentHO = (TaikoDifficultyHitObject) dho;
             if (!currentHO.HasTimingChange)
             {
+                rhythmLength += 1;
                 return 0.0;
             }
 
@@ -59,9 +62,31 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                         objectDifficulty *= Math.Atan(timeSince / 1000) / (Math.PI / 2);
                     }
                 }
+                /*
+                for (int start = ratioHistoryLength - l - 1; start >= 0; start--)
+                {
+                    bool samePattern = true;
+                    for (int i = 0; i < l; i++)
+                    {
+                        if (rhythmLengthHistory[start + i] != rhythmLengthHistory[ratioHistoryLength - l + i])
+                        {
+                            samePattern = false;
+                        }
+                    }
+
+                    if (samePattern) // Repitition found!
+                    {
+                        double timeSince = currentHO.BaseObject.StartTime - ratioObjectHistory[start].BaseObject.StartTime;
+                        objectDifficulty *= Math.Atan(timeSince / 5000) / (Math.PI / 2);
+                    }
+                }
+                */
+                // objectDifficulty /= repititionCount;
             }
 
-            // objectDifficulty *= (50.0 / currentHO.DeltaTime);
+            if (rhythmLength == 2) objectDifficulty *= 0.2;
+            if (rhythmLength == 4) objectDifficulty *= 0.5;
+
             return objectDifficulty;
 
         }
