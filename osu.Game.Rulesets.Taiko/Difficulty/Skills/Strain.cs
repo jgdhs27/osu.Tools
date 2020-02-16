@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private const double rhythm_change_base = 2.0;
 
         protected override double SkillMultiplier => 1;
-        protected override double StrainDecayBase => 0.3;
+        protected override double StrainDecayBase => 0.2;
 
         private ColourSwitch lastColourSwitch = ColourSwitch.None;
 

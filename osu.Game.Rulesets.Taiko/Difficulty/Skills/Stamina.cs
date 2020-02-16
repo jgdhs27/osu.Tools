@@ -13,7 +13,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private int noteNumber = 0;
 
         protected override double SkillMultiplier => 1;
-        protected override double StrainDecayBase => 0.6;
+        protected override double StrainDecayBase => 0.5;
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
