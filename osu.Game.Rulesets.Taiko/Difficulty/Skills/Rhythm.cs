@@ -30,7 +30,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                 return 0.0;
             }
 
-            double objectDifficulty = 1.0;
+            double objectDifficulty = currentHO.Rhythm.Difficulty;
 
             ratioObjectHistory.Add(currentHO);
             // Console.WriteLine("timing change");
@@ -83,9 +83,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                 */
                 // objectDifficulty /= repititionCount;
             }
-
-            if (rhythmLength == 2) objectDifficulty *= 0.2;
-            if (rhythmLength == 4) objectDifficulty *= 0.5;
 
             return objectDifficulty;
 

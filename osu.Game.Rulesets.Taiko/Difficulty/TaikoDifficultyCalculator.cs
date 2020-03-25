@@ -4,14 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FFmpeg.AutoGen;
-using NUnit.Framework;
 using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Taiko.Difficulty.Patterns;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Mods;
@@ -34,8 +31,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
 
             var difficultyHitObjects = CreateDifficultyHitObjects(beatmap, clockRate).OrderBy(h => h.BaseObject.StartTime).ToList();
-
-            new PatternGenerator().Create(difficultyHitObjects);
 
             double sectionLength = SectionLength * clockRate;
 
@@ -82,8 +77,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             List<double> peaks = new List<double>();
             for (int i = 0; i < colour.StrainPeaks.Count; i++)
             {
-                double colourPeak = Math.Pow(colour.StrainPeaks[i], 0.8) * 0.05;
-                double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1.5) * 0.018;
+                double colourPeak = Math.Pow(colour.StrainPeaks[i], 0.8) * 0.0;
+                double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1.5) * 0.025;
                 double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * 0.0017;
                 peaks.Add(norm(3, colourPeak, rhythmPeak, staminaPeak));
             }
@@ -102,8 +97,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 return new TaikoDifficultyAttributes { Mods = mods, Skills = skills };
 
             double colourRating = Math.Pow(skills[0].DifficultyValue(), 0.8) * 0.05;
-            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 1.5) * 0.018;
-            double staminaRating = Math.Pow(skills[2].DifficultyValue() + skills[3].DifficultyValue(), 1.5) * 0.0018;
+            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 1.5) * 0.025;
+            double staminaRating = Math.Pow(skills[2].DifficultyValue() + skills[3].DifficultyValue(), 1.5) * 0.0017;
             double combinedRating = combinedDifficulty(skills[0], skills[1], skills[2], skills[3]);
 
             Console.WriteLine("colour\t" + colourRating);
