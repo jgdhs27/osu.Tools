@@ -13,6 +13,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public readonly bool HasTimingChange;
         public readonly bool isBreak;
         public readonly TaikoDifficultyHitObjectRhythm Rhythm;
+        public readonly bool IsKat;
 
         public readonly int RhythmID;
 
@@ -27,6 +28,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             Rhythm = TaikoDifficultyHitObjectRhythm.GetClosest(NoteLength / prevLength);
             RhythmID = Rhythm.ID;
             HasTypeChange = lastObject is RimHit != hitObject is RimHit;
+            IsKat = lastObject is RimHit;
             HasTimingChange = !TaikoDifficultyHitObjectRhythm.IsRepeat(RhythmID);
         }
 
