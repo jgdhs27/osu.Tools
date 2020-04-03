@@ -1,6 +1,7 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
@@ -16,9 +17,83 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private ColourSwitch lastColourSwitch = ColourSwitch.None;
         private int sameColourCount = 1;
 
+        private int[] previousDonLengths = {0, 0}, previousKatLengths = {0, 0};
+        private int sameTypeCount = 1;
+        // TODO: make this smarter (dont initialise with "Don")
+        private bool previousIsKat = false;
+
         protected override double StrainValueOf(DifficultyHitObject current)
         {
+            return StrainValueOfNew(current);
+        }
 
+        protected double StrainValueOfNew(DifficultyHitObject current)
+        {
+
+            double returnVal = 0.0;
+            double returnMultiplier = 1.0;
+
+            if (previousIsKat != ((TaikoDifficultyHitObject) current).IsKat)
+            {
+                returnVal = 1.5 - (1.75 / (sameTypeCount + 0.65));
+
+                if (previousIsKat)
+                {
+                    if (sameTypeCount % 2 == previousDonLengths[0] % 2)
+                    {
+                        returnMultiplier *= 0.8;
+                    }
+
+                    if (previousKatLengths[0] == sameTypeCount)
+                    {
+                        returnMultiplier *= 0.525;
+                    }
+
+                    if (previousKatLengths[1] == sameTypeCount)
+                    {
+                        returnMultiplier *= 0.75;
+                    }
+
+                    previousKatLengths[1] = previousKatLengths[0];
+                    previousKatLengths[0] = sameTypeCount;
+                }
+                else
+                {
+                    if (sameTypeCount % 2 == previousKatLengths[0] % 2)
+                    {
+                        returnMultiplier *= 0.8;
+                    }
+
+                    if (previousDonLengths[0] == sameTypeCount)
+                    {
+                        returnMultiplier *= 0.525;
+                    }
+
+                    if (previousDonLengths[1] == sameTypeCount)
+                    {
+                        returnMultiplier *= 0.75;
+                    }
+
+                    previousDonLengths[1] = previousDonLengths[0];
+                    previousDonLengths[0] = sameTypeCount;
+                }
+
+
+                sameTypeCount = 1;
+                previousIsKat = ((TaikoDifficultyHitObject) current).IsKat;
+
+            }
+
+            else
+            {
+                sameTypeCount += 1;
+            }
+
+            return Math.Min(1.25, returnVal) * returnMultiplier;
+        }
+
+        protected double StrainValueOfOld(DifficultyHitObject current)
+        {
 
             double addition = 0;
 
