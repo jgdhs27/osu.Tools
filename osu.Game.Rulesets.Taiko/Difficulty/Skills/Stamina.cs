@@ -13,43 +13,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     public class Stamina : Skill
     {
 
-        private TaikoDifficultyHitObject prevHO = null;
-        private int monoCounter = 0;
-
         private int hand;
         private int noteNumber = 0;
 
         protected override double SkillMultiplier => 1;
         protected override double StrainDecayBase => 0.5;
 
+        private readonly int historyLen
+
+
         protected override double StrainValueOf(DifficultyHitObject current)
         {
-
-            TaikoDifficultyHitObject currentHO = (TaikoDifficultyHitObject) current;
-
             noteNumber += 1;
             noteNumber = noteNumber % 2;
 
             if (noteNumber == hand)
             {
-
-
-                if ((prevHO != null) && (currentHO.IsKat == prevHO.IsKat))
-                {
-                    monoCounter += 1;
-                }
-                else
-                {
-                    monoCounter = 1;
-                }
-
-                prevHO = currentHO;
-
-                if (monoCounter > 2)
-                {
-                    return 1.2;
-                }
-
                 return 1.0;
             }
 

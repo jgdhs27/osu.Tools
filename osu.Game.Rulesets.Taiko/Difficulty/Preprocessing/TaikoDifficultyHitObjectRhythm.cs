@@ -76,8 +76,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                 new TaikoDifficultyHitObjectRhythm(1, 3, 0.35),
                 new TaikoDifficultyHitObjectRhythm(3, 2, 1.0),
                 new TaikoDifficultyHitObjectRhythm(2, 3, 1.0),
-                new TaikoDifficultyHitObjectRhythm(5, 4, 0.9),
-                new TaikoDifficultyHitObjectRhythm(4, 5, 0.9)
+                new TaikoDifficultyHitObjectRhythm(5, 4, 1.0),
+                new TaikoDifficultyHitObjectRhythm(4, 5, 1.0)
             };
 
             for (int i = 0; i < commonRhythms.Length; i++)
@@ -98,6 +98,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public static bool IsRepeat(int id)
         {
             return id == constRhythmID;
+        }
+
+        public bool IsSpeedup()
+        {
+            return ratio < 1.0;
         }
 
         private TaikoDifficultyHitObjectRhythm(double ratio, double difficulty)

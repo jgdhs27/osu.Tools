@@ -24,14 +24,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
         // Penalty for repeated sequences of rhythm changes
         private double repititionPenalty(double timeSinceRepititionMS)
         {
-            return Math.Atan(timeSinceRepititionMS / 1000) / (Math.PI / 2);
+            double t = Math.Atan(timeSinceRepititionMS / 1000) / (Math.PI / 2);
+            return t;
         }
 
-        // Penalty for short patterns, especially 1 note patterns.
+        // Penalty for short patterns
         private double patternLengthPenalty(int patternLength)
         {
-            double n = (double)patternLength;
-            return 1 - (1 / n / 2);
+            return Math.Min(0.15 * patternLength, 1.0);
         }
 
         // Penalty for notes so slow that alting is not necessary.
@@ -41,6 +41,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
             else if (noteLengthMS > 160) return 0.6;
             else return (-0.005 * noteLengthMS + 1.4);
         }
+
+        // Penalty for the first rhythm change in a pattern
+        private const double first_burst_penalty = 0.3;
+        private bool prevIsSpeedup = true;
 
         protected override double StrainValueOf(DifficultyHitObject dho)
         {
@@ -80,8 +84,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills {
                     {
                         double timeSince = currentHO.BaseObject.StartTime - ratioObjectHistory[start].BaseObject.StartTime;
                         objectDifficulty *= repititionPenalty(timeSince);
+                        break;
                     }
                 }
+            }
+
+            if (currentHO.Rhythm.IsSpeedup())
+            {
+                if (prevIsSpeedup)
+                {
+                    objectDifficulty *= first_burst_penalty;
+                }
+
+                prevIsSpeedup = true;
             }
 
             objectDifficulty *= patternLengthPenalty(rhythmLength);
