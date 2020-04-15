@@ -19,9 +19,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
 
-        private static readonly double rhythmSkillMultiplier = 0.1;
-        private static readonly double colourSkillMultiplier = 0.04;
-        private static readonly double staminaSkillMultiplier = 0.00181;
+        private static readonly double rhythmSkillMultiplier = 0.11;
+        private static readonly double colourSkillMultiplier = 0.042;
+        private static readonly double staminaSkillMultiplier = 0.00189;
 
         public TaikoDifficultyCalculator(Ruleset ruleset, WorkingBeatmap beatmap)
             : base(ruleset, beatmap)
@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (!beatmap.HitObjects.Any())
                 return CreateDifficultyAttributes(beatmap, mods, skills, clockRate);
 
-            var difficultyHitObjects = CreateDifficultyHitObjects(beatmap, clockRate).OrderBy(h => h.BaseObject.StartTime).ToList();
+            List<DifficultyHitObject> difficultyHitObjects = CreateDifficultyHitObjects(beatmap, clockRate).OrderBy(h => h.BaseObject.StartTime).ToList();
 
             double sectionLength = SectionLength * clockRate;
 
@@ -68,7 +68,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double readingPenalty(double staminaDifficulty)
         {
-            return 1 - staminaDifficulty / 14;
+            return Math.Max(0, 1 - staminaDifficulty / 14);
+            // return 1;
         }
 
 
@@ -79,26 +80,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 Math.Pow(v2, p) +
                 Math.Pow(v3, p)
                 , 1 / p);
-        }
-
-        private double strain(Skill stamina1, Skill stamina2)
-        {
-
-            double difficulty = 0;
-            double weight = 1;
-            List<double> peaks = new List<double>();
-            for (int i = 0; i < stamina1.StrainPeaks.Count; i++)
-            {
-                double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * staminaSkillMultiplier;
-                peaks.Add(staminaPeak);
-            }
-            foreach (double strain in peaks.OrderByDescending(d => d))
-            {
-                difficulty += strain * weight;
-                weight *= 0.98;
-            }
-
-            return Math.Pow(difficulty, 0.9) * 1.9;
         }
 
         private double combinedDifficulty(Skill colour, Skill rhythm, Skill stamina1, Skill stamina2)
@@ -114,9 +95,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             for (int i = 0; i < colour.StrainPeaks.Count; i++)
             {
                 double colourPeak = Math.Pow(colour.StrainPeaks[i], 0.8) * colourSkillMultiplier * readingPenalty;
-                double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1) * rhythmSkillMultiplier * readingPenalty;
+                double rhythmPeak = Math.Pow(rhythm.StrainPeaks[i], 1) * rhythmSkillMultiplier;
                 double staminaPeak = Math.Pow(stamina1.StrainPeaks[i] + stamina2.StrainPeaks[i], 1.5) * staminaSkillMultiplier;
-                peaks.Add(norm(3, colourPeak, rhythmPeak, staminaPeak));
+                peaks.Add(norm(2, colourPeak, rhythmPeak, staminaPeak));
             }
             foreach (double strain in peaks.OrderByDescending(d => d))
             {
@@ -124,7 +105,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 weight *= 0.9;
             }
 
-            return Math.Pow(difficulty, 0.9) * 3.8;
+            return difficulty * 2.9;
         }
 
         protected override DifficultyAttributes CreateDifficultyAttributes(IBeatmap beatmap, Mod[] mods, Skill[] skills, double clockRate)
@@ -136,14 +117,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double readingPenalty = this.readingPenalty(staminaRating);
 
             double colourRating = Math.Pow(skills[0].DifficultyValue(), 0.8) * colourSkillMultiplier * readingPenalty;
-            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 1) * rhythmSkillMultiplier * readingPenalty;
+            double rhythmRating = Math.Pow(skills[1].DifficultyValue(), 1) * rhythmSkillMultiplier;
             double combinedRating = combinedDifficulty(skills[0], skills[1], skills[2], skills[3]);
 
             Console.WriteLine("colour\t" + colourRating);
             Console.WriteLine("rhythm\t" + rhythmRating);
             Console.WriteLine("stamina\t" + staminaRating);
-            double separatedRating = norm(2, colourRating, rhythmRating, staminaRating);
+            double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
+            // Console.WriteLine("combinedRating\t" + combinedRating);
+            // Console.WriteLine("separatedRating\t" + separatedRating);
             double starRating = 0.5 * separatedRating + 0.5 * combinedRating;
+
+            // starRating = Math.Pow(starRating, 0.9) * 1.25;
 
             return new TaikoDifficultyAttributes
             {
