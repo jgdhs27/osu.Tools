@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private static readonly double rhythmSkillMultiplier = 0.11;
         private static readonly double colourSkillMultiplier = 0.042;
-        private static readonly double staminaSkillMultiplier = 0.00189;
+        private static readonly double staminaSkillMultiplier = 0.00168;
 
         public TaikoDifficultyCalculator(Ruleset ruleset, WorkingBeatmap beatmap)
             : base(ruleset, beatmap)
